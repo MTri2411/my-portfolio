@@ -1,8 +1,25 @@
-import { Box, Typography, Card, CardContent, Link, Stack, Chip, Button, Divider } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 import { motion } from "framer-motion";
-import { GitHub, Launch, Code, Lock, AutoAwesome } from "@mui/icons-material";
-import { useState } from "react";
-import Image from "next/image";
+import { useState, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { AutoAwesome, Launch, Lock } from "@mui/icons-material";
+
+const ProjectCard = dynamic(() => import("./ProjectCard"), {
+  loading: () => (
+    <Box sx={{ 
+      width: "100%", 
+      height: 400, 
+      bgcolor: "rgba(15, 23, 42, 0.03)",
+      borderRadius: 3,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      <Typography>Loading...</Typography>
+    </Box>
+  ),
+  ssr: false
+});
 
 const projects = [
   {
@@ -97,144 +114,18 @@ export default function ProjectsContent() {
         animate="show"
       >
         <Stack spacing={3}>
-          {projects.map((project, idx) => {
-            const statusStyle = getStatusColor(project.status);
-            const currentImageIndex = activeImageIndex[project.name] || 0;
-            
-            return (
-              <motion.div key={project.name} variants={item}>
-                <Card 
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    bgcolor: "rgba(15, 23, 42, 0.03)",
-                    border: '1px solid rgba(99, 102, 241, 0.1)',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-                      transform: 'translateY(-5px)',
-                      borderColor: 'rgba(99, 102, 241, 0.3)',
-                    }
-                  }}
-                >
-                  {project.image && project.image.length > 0 && (
-                    <Box sx={{ position: 'relative', width: '100%', height: 200, bgcolor: '#000' }}>
-                      <Image 
-                        src={project.image[currentImageIndex]} 
-                        alt={project.name}
-                        layout="fill"
-                        objectFit="cover"
-                      />
-                      
-                      {/* Điều khiển hình ảnh nếu có nhiều hơn 1 */}
-                      {project.image.length > 1 && (
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          bottom: 10, 
-                          left: '50%', 
-                          transform: 'translateX(-50%)',
-                          display: 'flex',
-                          gap: 1
-                        }}>
-                          {project.image.map((_, index) => (
-                            <Box 
-                              key={index}
-                              onClick={() => handleImageChange(project.name, index)}
-                              sx={{ 
-                                width: 8, 
-                                height: 8, 
-                                borderRadius: '50%',
-                                bgcolor: index === currentImageIndex ? 'white' : 'rgba(255,255,255,0.5)',
-                                cursor: 'pointer'
-                              }}
-                            />
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                  
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h5" fontWeight={700} color="primary.main">
-                        {project.name}
-                      </Typography>
-                      
-                      <Chip 
-                        icon={statusStyle.icon}
-                        label={project.status} 
-                        size="small"
-                        sx={{ 
-                          bgcolor: statusStyle.bg, 
-                          color: statusStyle.text,
-                          fontWeight: 600,
-                          borderRadius: '4px'
-                        }} 
-                      />
-                    </Box>
-                    
-                    <Typography variant="body1" color="text.secondary" mb={2} sx={{ lineHeight: 1.7 }}>
-                      {project.desc}
-                    </Typography>
-                    
-                    <Divider sx={{ my: 2 }} />
-                    
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                      {project.stack.map((tech) => (
-                        <Chip 
-                          key={tech} 
-                          label={tech}
-                          size="small"
-                          sx={{
-                            bgcolor: `${stackColors[tech]}10` || 'rgba(99, 102, 241, 0.1)',
-                            color: stackColors[tech] || 'primary.main',
-                            border: `1px solid ${stackColors[tech]}30` || 'rgba(99, 102, 241, 0.2)',
-                            fontWeight: 500,
-                            '&:hover': {
-                              bgcolor: `${stackColors[tech]}20` || 'rgba(99, 102, 241, 0.2)',
-                            }
-                          }}
-                        />
-                      ))}
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      {project.link && (
-                        <Button 
-                          variant="contained" 
-                          startIcon={<GitHub />}
-                          href={project.link}
-                          target="_blank"
-                          size="small"
-                          sx={{
-                            bgcolor: '#24292e',
-                            '&:hover': {
-                              bgcolor: '#1a1e23',
-                            }
-                          }}
-                        >
-                          Source Code
-                        </Button>
-                      )}
-                      
-                      {/* Nút demo có thể thêm nếu có link */}
-                      {project.status !== "Private" && !project.link && (
-                        <Button 
-                          variant="outlined"
-                          startIcon={<Code />}
-                          size="small"
-                          sx={{ borderColor: 'primary.main', color: 'primary.main' }}
-                        >
-                          In Development
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+          <Suspense fallback={<Typography>Loading projects...</Typography>}>
+            {projects.map((project, idx) => (
+              <ProjectCard
+                key={project.name}
+                project={project}
+                idx={idx}
+                stackColors={stackColors}
+                currentImageIndex={activeImageIndex[project.name] || 0}
+                onImageChange={handleImageChange}
+              />
+            ))}
+          </Suspense>
         </Stack>
       </motion.div>
     </Box>

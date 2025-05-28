@@ -1,25 +1,38 @@
+'use client';
+
+import { useEffect } from 'react';
+import { measurePaintTiming, measureResourceTiming, measureMemoryUsage } from '../utils/monitoring';
 import type React from "react"
-import type { Metadata } from "next"
 import { JetBrains_Mono } from "next/font/google"
 import ThemeRegistry from "@/theme/ThemeRegistry"
 import { AppProvider } from "@/context/AppContext"
+import './globals.css'
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
 })
 
-export const metadata: Metadata = {
-  title: "Minh Tri | Web Developer",
-  description: "Personal portfolio of Minh Tri, Web Developer",
-  generator: 'v0.dev'
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  useEffect(() => {
+    // Theo dõi performance metrics khi component mount
+    measurePaintTiming();
+    measureResourceTiming();
+    measureMemoryUsage();
+
+    // Theo dõi resource loading mỗi 5 giây
+    const interval = setInterval(() => {
+      measureResourceTiming();
+      measureMemoryUsage();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={jetbrainsMono.variable}>
@@ -30,6 +43,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'
